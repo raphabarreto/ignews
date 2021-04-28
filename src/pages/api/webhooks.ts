@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+
 import { Readable } from 'stream';
 import Stripe from 'stripe';
 import { stripe } from '../../services/stripe';
@@ -22,8 +23,8 @@ export const config = {
 
 const relevantEvents = new Set([
   'checkout.session.completed',
-  'checkout.subscription.updated',
-  'checkout.subscription.deleted',
+  'customer.subscription.updated',
+  'customer.subscription.deleted',
 ]);
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
@@ -43,7 +44,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       return res.status(400).send(`Webhook error: ${err.message}`);
     }
 
-    const { type } = event;
+    const type = event.type;
 
     if (relevantEvents.has(type)) {
       try {
@@ -54,10 +55,12 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
             await saveSubscription(
               subscription.id,
-              subscription.customer.toString()
+              subscription.customer.toString(),
+              false
             );
 
             break;
+
           case 'checkout.session.completed':
             const checkoutSession = event.data
               .object as Stripe.Checkout.Session;
@@ -73,7 +76,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             throw new Error('Unhandled event');
         }
       } catch (err) {
-        return res.json({ error: 'Webhook handler failed.' });
+        return res.json({ error: 'Webhook handler failed' });
       }
     }
 
