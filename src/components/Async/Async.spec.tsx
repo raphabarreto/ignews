@@ -11,8 +11,6 @@ test('it renders correctly', async () => {
 
   expect(screen.getByText('Hello World')).toBeInTheDocument();
 
-  // await waitForElementToBeRemoved(screen.queryByText('Button'));
-
   await waitFor(() => {
     return expect(screen.queryByText('Button')).not.toBeInTheDocument();
   });
